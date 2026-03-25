@@ -3,3 +3,4 @@ langgraph
 openai
 python-dotenv
 groq
+streamlit

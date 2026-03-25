@@ -20,7 +20,7 @@ def extract_json(text):
     except:
         pass
 
-    return None  # IMPORTANT change
+    return {"fallback": True, "raw": text}  # IMPORTANT change
 
 
 def call_llm(prompt):

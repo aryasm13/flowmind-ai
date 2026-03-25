@@ -17,16 +17,16 @@ Text: {text}
 
     result = call_llm(prompt)
 
-    # ✅ FALLBACK (VERY IMPORTANT)
-    if result is None:
+# SAFE FALLBACK
+    if not result or isinstance(result, dict):
         result = [
             {
-                "task": "Assign backend to John",
-                "owner": "John",
-                "deadline": "Friday"
+                "task": "General task",
+                "owner": "Unassigned",
+                "deadline": "Not specified"
             }
         ]
 
-    log_step("extractor", result)
+        log_step("extractor", result)
 
     return {**state, "tasks": result}
