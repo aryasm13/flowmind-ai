@@ -1,94 +1,64 @@
-import streamlit as st
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 import json
-from graph.workflow import build_workflow
-from utils.preprocessor import preprocess_input
+from datetime import datetime
 
-# -------------------- CONFIG --------------------
-st.set_page_config(
-    page_title="FlowMind AI",
-    layout="wide"
-)
+from graph.workflow import app as workflow_app
 
-# -------------------- LIGHT THEME STYLE --------------------
-st.markdown("""
-    <style>
-    .stApp {
-        background-color: #f5f7fb;
-        color: #1f2937;
-    }
+app = Flask(__name__)
+CORS(app)
 
-    textarea, .stTextArea textarea {
-        background-color: #ffffff !important;
-        color: #000000 !important;
-    }
+@app.route("/")
+def home():
+    return {"status": "FlowMind API running"}
 
-    .stButton button {
-        background-color: #2563eb;
-        color: white;
-        border-radius: 8px;
-        padding: 0.5rem 1rem;
-    }
+@app.route("/run-workflow", methods=["GET"])
+def test_run():
+    return {"message": "Use POST request with JSON body"}
 
-    .stButton button:hover {
-        background-color: #1d4ed8;
-    }
-    </style>
-""", unsafe_allow_html=True)
+@app.route("/run-workflow", methods=["POST"])
+def run_pipeline():
+    try:
+        data = request.json
+        input_text = data.get("input", "")
 
-# -------------------- LOG RESET --------------------
-def reset_logs():
-    with open("data/logs.json", "w") as f:
-        json.dump([], f)
+        if not input_text:
+            return jsonify({"error": "No input provided"}), 400
 
-# -------------------- HEADER --------------------
-st.title("FlowMind AI - Autonomous Workflow Agent")
-st.write("Provide a business instruction or upload a transcript. The system will process and execute the workflow.")
+        result = workflow_app.invoke({"input": input_text})
 
-# -------------------- INPUT --------------------
-uploaded_file = st.file_uploader("Upload Transcript (.txt / .md)", type=["txt", "md"])
+        log_entry = {
+            "timestamp": str(datetime.now()),
+            "input": input_text,
+            "output": result
+        }
 
-input_text = ""
+        try:
+            with open("data/logs.json", "r") as f:
+                logs = json.load(f)
+        except:
+            logs = []
 
-if uploaded_file is not None:
-    input_text = uploaded_file.read().decode("utf-8")
-    st.success("File uploaded successfully")
-else:
-    input_text = st.text_area(
-        "Enter Task:",
-        "Assign backend to John and launch feature by Friday"
-    )
+        logs.append(log_entry)
 
-# -------------------- RUN WORKFLOW --------------------
-if st.button("Run Workflow"):
+        with open("data/logs.json", "w") as f:
+            json.dump(logs, f, indent=2)
 
-    reset_logs()  # clear logs every run
+        return jsonify(result)
 
-    app = build_workflow()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-    clean_text = preprocess_input(input_text)
 
-    # Optional visibility
-    with st.expander("Processed Input"):
-        st.write(clean_text)
+@app.route("/logs", methods=["GET"])
+def get_logs():
+    try:
+        with open("data/logs.json", "r") as f:
+            logs = json.load(f)
+        return jsonify(logs)
+    except:
+        return jsonify([])
 
-    result = app.invoke({"input": clean_text})
 
-    # -------------------- OUTPUT --------------------
-
-    st.subheader("Extracted Tasks")
-    st.json(result.get("tasks"))
-
-    st.subheader("Planned Steps")
-    st.json(result.get("steps"))
-
-    st.subheader("Validation Status")
-    st.write(result.get("status"))
-
-    if result.get("status") == "FAIL":
-        st.subheader("Issues Detected")
-        st.write(result.get("issues"))
-
-        st.subheader("Recovery Actions")
-        st.json(result.get("recovery"))
-    else:
-        st.success("Workflow executed successfully")
+if __name__ == "__main__":
+    app.run(debug=True)

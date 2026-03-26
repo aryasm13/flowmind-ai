@@ -1,8 +1,9 @@
 from utils.llm import call_llm
 from utils.logger import log_step
+import json
 
 def extractor(state):
-    text = state["input"]
+    text = state.get("input", "")
 
     prompt = f"""
 Extract tasks.
@@ -16,9 +17,12 @@ Text: {text}
 """
 
     result = call_llm(prompt)
-
-# SAFE FALLBACK
-    if not result or isinstance(result, dict):
+    try:
+        if isinstance(result, str):
+            result = json.loads(result)
+        if not isinstance(result, list):
+            raise Exception()
+    except:
         result = [
             {
                 "task": "General task",
@@ -27,6 +31,6 @@ Text: {text}
             }
         ]
 
-        log_step("extractor", result)
+    log_step("extractor", result)
 
     return {**state, "tasks": result}

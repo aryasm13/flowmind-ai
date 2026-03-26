@@ -7,7 +7,8 @@ from agents.validator import validator
 from agents.recovery import recovery
 
 def route_decision(state):
-    return "recovery" if state["status"] == "FAIL" else "__end__"
+    return "recovery" if state.get("status") == "FAIL" else "__end__"
+
 
 def build_workflow():
     workflow = StateGraph(dict)
@@ -34,3 +35,5 @@ def build_workflow():
     )
 
     return workflow.compile()
+
+app = build_workflow()

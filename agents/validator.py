@@ -1,7 +1,7 @@
 from utils.logger import log_step
 
 def validator(state):
-    execution = state["execution"]
+    execution = state.get("execution", {})
 
     issues = []
 
@@ -14,10 +14,10 @@ def validator(state):
         if not task.get("steps"):
             issues.append("Missing steps")
 
-    # Check deadline
+    # check deadlines
     original_tasks = state.get("tasks", [])
     for t in original_tasks:
-        if not t.get("deadline"):
+        if not t.get("deadline") or t.get("deadline") == "Not specified":
             issues.append("Missing deadline")
 
     if issues:
@@ -25,6 +25,6 @@ def validator(state):
     else:
         result = {"status": "PASS", "issues": []}
 
-    log_step("validator", result)
+    log_step("status", result)
 
     return {**state, **result}

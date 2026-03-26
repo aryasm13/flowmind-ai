@@ -1,7 +1,7 @@
 from utils.logger import log_step
 
 def executor(state):
-    steps = state["steps"]
+    steps = state.get("steps", [])
 
     result = {
         "executed": steps,

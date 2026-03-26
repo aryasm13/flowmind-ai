@@ -1,7 +1,7 @@
 from utils.logger import log_step
 
 def recovery(state):
-    status = state["status"]
+    status = state.get("status")
 
     if status == "FAIL":
         issues = state.get("issues", [])
