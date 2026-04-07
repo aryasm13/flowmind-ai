@@ -1,25 +1,23 @@
 from utils.logger import log_step
 
 def recovery(state):
-    status = state.get("status")
+    tasks = state.get("tasks", [])
+    issues = state.get("issues", [])
 
-    if status == "FAIL":
-        issues = state.get("issues", [])
+    fixes = []
 
-        fixes = []
+    for t in tasks:
+        if not t.get("deadline") or t.get("deadline") in ["Not specified", ""]:
+            fixes.append({
+                "task": t.get("task"),
+                "problem": "Missing deadline",
+                "suggested_fix": "Set deadline within 3 days based on priority"
+            })
 
-        for issue in issues:
-            if "deadline" in issue:
-                fixes.append("Add deadline to tasks")
-            elif "steps" in issue:
-                fixes.append("Add execution steps")
-            elif "task" in issue:
-                fixes.append("Define task clearly")
-
-        result = {"fixes": fixes}
-
-    else:
+    if not fixes:
         result = {"fixes": ["No action needed"]}
+    else:
+        result = {"fixes": fixes}
 
     log_step("recovery", result)
 

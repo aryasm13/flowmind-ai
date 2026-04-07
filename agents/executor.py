@@ -3,8 +3,16 @@ from utils.logger import log_step
 def executor(state):
     steps = state.get("steps", [])
 
+    executed = []
+
+    for item in steps:
+        executed.append({
+            "task": item.get("task"),
+            "steps": item.get("steps", [])
+        })
+
     result = {
-        "executed": steps,
+        "executed": executed,
         "status": "SIMULATED"
     }
 

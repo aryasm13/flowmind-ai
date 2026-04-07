@@ -2,28 +2,38 @@ from utils.logger import log_step
 
 def validator(state):
     execution = state.get("execution", {})
+    tasks = state.get("tasks", [])
 
     issues = []
 
-    tasks = execution.get("executed", [])
+    executed = execution.get("executed", [])
 
-    for task in tasks:
+    # -------- Execution checks --------
+    for task in executed:
         if not task.get("task"):
             issues.append("Missing task name")
 
-        if not task.get("steps"):
-            issues.append("Missing steps")
+        if not task.get("steps") or len(task.get("steps")) == 0:
+            issues.append(f"Task '{task.get('task')}' has no execution steps")
 
-    # check deadlines
-    original_tasks = state.get("tasks", [])
-    for t in original_tasks:
-        if not t.get("deadline") or t.get("deadline") == "Not specified":
-            issues.append("Missing deadline")
+    # -------- Deadline checks --------
+    for t in tasks:
+        deadline = t.get("deadline")
 
+        if not deadline or deadline in ["Not specified", ""]:
+            issues.append(f"Missing deadline for task: {t.get('task')}")
+
+    # -------- Result --------
     if issues:
-        result = {"status": "FAIL", "issues": issues}
+        result = {
+            "status": "FAIL",
+            "issues": issues
+        }
     else:
-        result = {"status": "PASS", "issues": []}
+        result = {
+            "status": "PASS",
+            "issues": []
+        }
 
     log_step("status", result)
 
