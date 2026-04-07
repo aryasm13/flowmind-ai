@@ -1,12 +1,18 @@
 def preprocess_input(text):
-    # Clean text
     text = text.strip()
 
-    # Remove unnecessary line breaks
+    # normalize
     text = text.replace("\n", " ")
 
-    # Basic filtering (can expand later)
-    if len(text) > 2000:
-        text = text[:2000]
+    # split into chunks (sentence-based)
+    sentences = text.split(". ")
 
-    return text
+    # clean + filter
+    chunks = []
+    for s in sentences:
+        s = s.strip()
+        if len(s) > 10:
+            chunks.append(s)
+
+    # limit chunks (safety)
+    return chunks[:20]
