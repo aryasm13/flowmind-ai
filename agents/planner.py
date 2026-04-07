@@ -6,13 +6,21 @@ def planner(state):
     tasks = state.get("tasks", [])
 
     prompt = f"""
-Break tasks into steps.
+You are an enterprise workflow planner.
 
-STRICT JSON:
+Convert tasks into detailed execution steps.
+
+RULES:
+- Each step must be specific and actionable
+- Do NOT write generic steps like "Step 1"
+- Include real actions (assign, review, test, deploy, coordinate)
+- Keep steps realistic for enterprise workflows
+
+Return STRICT JSON:
 [
   {{
     "task": "...",
-    "steps": ["step1", "step2"]
+    "steps": ["specific action", "specific action"]
   }}
 ]
 
@@ -21,16 +29,24 @@ Tasks:
 """
 
     result = call_llm(prompt)
+
     try:
         if isinstance(result, str):
             result = json.loads(result)
+
         if not isinstance(result, list):
             raise Exception()
+
     except:
         result = [
             {
                 "task": t.get("task", "Unknown"),
-                "steps": ["Step 1", "Step 2"]
+                "steps": [
+                    "Assign responsible person",
+                    "Define execution steps",
+                    "Execute task",
+                    "Review completion"
+                ]
             }
             for t in tasks
         ]

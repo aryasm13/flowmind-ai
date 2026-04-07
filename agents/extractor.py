@@ -6,26 +6,44 @@ def extractor(state):
     text = state.get("input", "")
 
     prompt = f"""
-Extract tasks.
+You are an enterprise task extraction agent.
 
-Return ONLY JSON:
+Extract actionable tasks from the input.
+
+RULES:
+- Identify task clearly
+- Extract owner if mentioned, else "Unassigned"
+- Extract deadline if mentioned, else "Not specified"
+- Break compound sentences into multiple tasks
+- Keep tasks short and precise
+
+Return STRICT JSON ONLY:
 [
-  {{"task":"...","owner":"...","deadline":"..."}}
+  {{
+    "task": "...",
+    "owner": "...",
+    "deadline": "..."
+  }}
 ]
 
-Text: {text}
+Input:
+{text}
 """
 
     result = call_llm(prompt)
+
     try:
         if isinstance(result, str):
             result = json.loads(result)
+
         if not isinstance(result, list):
             raise Exception()
+
     except:
+        # fallback (IMPORTANT)
         result = [
             {
-                "task": "General task",
+                "task": text[:50],
                 "owner": "Unassigned",
                 "deadline": "Not specified"
             }
