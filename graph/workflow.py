@@ -5,19 +5,25 @@ from agents.planner import planner
 from agents.executor import executor
 from agents.validator import validator
 from agents.recovery import recovery
+from agents.sla_agent import sla_agent
 
 
-# ---------- ROUTING LOGIC ----------
-def route_decision(state):
-    """
-    Decide next step after validation
-    """
+# ---------- ROUTING ----------
+def route_after_validation(state):
     if state.get("status") == "FAIL":
         return "recovery"
     return "__end__"
 
 
-# ---------- BUILD GRAPH ----------
+def route_after_recovery(state):
+    return "sla_agent"
+
+
+def route_after_sla(state):
+    return "validator_final"
+
+
+# ---------- BUILD ----------
 def build_workflow():
     workflow = StateGraph(dict)
 
@@ -27,6 +33,10 @@ def build_workflow():
     workflow.add_node("executor", executor)
     workflow.add_node("validator", validator)
     workflow.add_node("recovery", recovery)
+    workflow.add_node("sla_agent", sla_agent)
+
+    # NEW final validator (reuse same function)
+    workflow.add_node("validator_final", validator)
 
     # Entry
     workflow.set_entry_point("extractor")
@@ -36,18 +46,23 @@ def build_workflow():
     workflow.add_edge("planner", "executor")
     workflow.add_edge("executor", "validator")
 
-    # Conditional routing
+    # Validator → recovery if fail
     workflow.add_conditional_edges(
         "validator",
-        route_decision,
+        route_after_validation,
         {
             "recovery": "recovery",
             "__end__": "__end__"
         }
     )
 
+    # Recovery → SLA agent
+    workflow.add_edge("recovery", "sla_agent")
+
+    # SLA → final validation
+    workflow.add_edge("sla_agent", "validator_final")
+
     return workflow.compile()
 
 
-# App instance
 app = build_workflow()
