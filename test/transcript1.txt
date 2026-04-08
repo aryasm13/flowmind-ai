@@ -1,0 +1,13 @@
+We need to launch the new payment gateway integration by next Friday.
+
+Rahul will handle backend API integration and coordinate with the fintech provider.
+
+Priya should take care of frontend UI updates and ensure compatibility with mobile devices.
+
+Testing must be completed by Wednesday, and QA team should report all bugs within 24 hours.
+
+Deployment will be handled by DevOps team, and rollback strategy must be ready.
+
+Also ensure compliance checks are completed before release.
+
+Schedule a review meeting on Thursday to finalize everything.
